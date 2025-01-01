@@ -1,47 +1,67 @@
 package com.example.privacyapp
-
+import com.example.privacyapp.data.CameraManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.privacyapp.data.PreferencesManager
+import com.example.privacyapp.screens.MainScreen
+import com.example.privacyapp.screens.PinScreen
+import com.example.privacyapp.screens.SettingsScreen
 import com.example.privacyapp.ui.theme.PrivacyAppTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var preferencesManager: PreferencesManager
+    private lateinit var cameraManager: CameraManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        preferencesManager = PreferencesManager(this)
+        cameraManager = CameraManager(this, this)
+
         setContent {
             PrivacyAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = "pin"
+                    ) {
+                        composable("pin") {
+                            PinScreen(
+                                navController = navController,
+                                preferencesManager = preferencesManager
+                            )
+                        }
+                        composable("main") {
+                            MainScreen(
+                                navController = navController,
+                                cameraManager = cameraManager
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                navController = navController,
+                                preferencesManager = preferencesManager
+                            )
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PrivacyAppTheme {
-        Greeting("Android")
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraManager.stopCamera()
     }
 }
