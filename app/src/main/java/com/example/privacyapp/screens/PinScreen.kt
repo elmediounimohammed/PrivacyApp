@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.privacyapp.data.PreferencesManager
 
+import com.example.privacyapp.navigation.NavigationGraph
 @Composable
 fun PinScreen(
     navController: NavController,

@@ -24,6 +24,12 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.privacyapp.data.CameraManager
 
+import com.example.privacyapp.navigation.NavigationGraph
+import com.example.privacyapp.navigation.Screen
+
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.foundation.clickable
+import android.util.Log
 
 @Composable
 fun MainScreen(
@@ -63,7 +69,43 @@ fun MainScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(bottom = 16.dp)
+                .clickable {
+                    try {
+                        navController.navigate(Screen.AppSelection.route)
+                    } catch (e: Exception) {
+                        Log.e("MainScreen", "Navigation failed", e)
+                    }
+                }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Protected Apps",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Select apps to monitor",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.Apps,
+                    contentDescription = "Select apps"
+                )
+            }
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 16.dp),
+
             colors = CardDefaults.cardColors(
                 containerColor = if (isMonitoringEnabled)
                     MaterialTheme.colorScheme.primaryContainer
@@ -154,7 +196,7 @@ fun MainScreen(
                         .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    IconButton(onClick = { navController.navigate("settings") }) {
+                    IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
                         Icon(Icons.Default.Settings, "Settings")
                     }
                     IconButton(onClick = { /* Toggle flash */ }) {

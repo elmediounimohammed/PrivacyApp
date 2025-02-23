@@ -75,7 +75,8 @@ fun SliderSettingItem(
 fun ClickableSettingItem(
     title: String,
     subtitle: String? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    content: @Composable (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -98,6 +99,7 @@ fun ClickableSettingItem(
                 )
             }
         }
+        content?.invoke()
     }
 }
 

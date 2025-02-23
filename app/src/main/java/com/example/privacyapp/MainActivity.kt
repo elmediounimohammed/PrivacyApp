@@ -1,6 +1,8 @@
 package com.example.privacyapp
-import com.example.privacyapp.data.CameraManager
+
+import CaptureScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.privacyapp.data.CameraManager
 import com.example.privacyapp.data.PreferencesManager
-import com.example.privacyapp.screens.MainScreen
-import com.example.privacyapp.screens.PinScreen
-import com.example.privacyapp.screens.SettingsScreen
+import com.example.privacyapp.screens.*
 import com.example.privacyapp.ui.theme.PrivacyAppTheme
+import com.example.privacyapp.navigation.Screen
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferencesManager: PreferencesManager
@@ -24,7 +26,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         preferencesManager = PreferencesManager(this)
         cameraManager = CameraManager(this, this)
-
+        try {
+            preferencesManager = PreferencesManager(this)
+            cameraManager = CameraManager(this, this)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error initializing managers", e)
+        }
         setContent {
             PrivacyAppTheme {
                 Surface(
@@ -34,24 +41,53 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = "pin"
+                        startDestination = Screen.Pin.route
                     ) {
-                        composable("pin") {
+//                        composable(Screen.Setup.route) {
+//                            FirstTimeSetupScreen(
+//                                cameraManager = cameraManager,
+//                                preferencesManager = preferencesManager,
+//                                onSetupComplete = {
+//                                    preferencesManager.setFirstTimeDone()
+//                                    navController.navigate(Screen.Pin.route) {
+//                                        popUpTo(Screen.Setup.route) { inclusive = true }
+//                                    }
+//                                }
+//                            )
+//                        }
+                        composable(Screen.Pin.route) {
                             PinScreen(
                                 navController = navController,
                                 preferencesManager = preferencesManager
                             )
                         }
-                        composable("main") {
+                        composable(Screen.Main.route) {
                             MainScreen(
                                 navController = navController,
                                 cameraManager = cameraManager
                             )
                         }
-                        composable("settings") {
+                        composable(Screen.Settings.route) {
                             SettingsScreen(
                                 navController = navController,
-                                preferencesManager = preferencesManager
+                                preferencesManager = preferencesManager,
+                                cameraManager = cameraManager
+                            )
+                        }
+                        composable(Screen.Capture.route) {
+                            CaptureScreen(
+                                cameraManager = cameraManager,
+                                preferencesManager = preferencesManager,
+                                onComplete = { navController.popBackStack() }
+                            )
+                        }
+                        composable(Screen.AppSelection.route) {
+                            AppSelectionScreen(
+                                appList = emptyList(),  // This will be handled by the screen itself
+                                onAppSelected = { },    // This will be handled by the screen itself
+                                onSaveSelection = {
+                                    navController.popBackStack()
+                                }
                             )
                         }
                     }

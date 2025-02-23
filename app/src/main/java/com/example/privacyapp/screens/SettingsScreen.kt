@@ -1,5 +1,6 @@
 package com.example.privacyapp.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,19 +18,30 @@ import com.example.privacyapp.components.ClickableSettingItem
 import com.example.privacyapp.components.SettingsSection
 import com.example.privacyapp.components.SliderSettingItem
 import com.example.privacyapp.components.SwitchSettingItem
+import com.example.privacyapp.data.CameraManager
 import com.example.privacyapp.data.PreferencesManager
+import coil.compose.AsyncImage
+
+import com.example.privacyapp.navigation.NavigationGraph
+import com.example.privacyapp.navigation.Screen
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager,
+    cameraManager: CameraManager
 ) {
     var notificationsEnabled by rememberSaveable { mutableStateOf(true) }
     var vibrationEnabled by rememberSaveable { mutableStateOf(true) }
     var autoStartEnabled by rememberSaveable { mutableStateOf(false) }
     var sensitivityLevel by rememberSaveable { mutableStateOf(0.7f) }
     var showChangePinDialog by rememberSaveable { mutableStateOf(false) }
+    var showImageDialog by remember { mutableStateOf(false) }
+    val referenceImageUri by remember {
+        mutableStateOf(preferencesManager.getReferenceImageUri())
+    }
 
     Scaffold(
         topBar = {
@@ -56,9 +68,21 @@ fun SettingsScreen(
                 SettingsSection(title = "Security") {
                     ClickableSettingItem(
                         title = "Change PIN",
-                       // description = "Change your app access PIN",
                         onClick = { showChangePinDialog = true }
                     )
+                    ClickableSettingItem(
+                        title = "Reference Face Image",
+                        subtitle = if (referenceImageUri != null) "Change Image" else "Set Image",
+                        onClick = { showImageDialog = true }
+                    ) {
+                        if (referenceImageUri != null) {
+                            AsyncImage(
+                                model = referenceImageUri,
+                                contentDescription = "Reference face",
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
                 }
 
                 // Notifications Section
@@ -100,7 +124,6 @@ fun SettingsScreen(
                     )
                     ClickableSettingItem(
                         title = "Version",
-                        //description = "1.0.0",
                         onClick = { /* Show version info */ }
                     )
                 }
@@ -115,6 +138,51 @@ fun SettingsScreen(
                     showChangePinDialog = false
                 },
                 preferencesManager = preferencesManager
+            )
+        }
+
+        if (showImageDialog) {
+            AlertDialog(
+                onDismissRequest = { showImageDialog = false },
+                title = { Text("Reference Face Image") },
+                text = {
+                    Column {
+                        if (referenceImageUri != null) {
+                            AsyncImage(
+                                model = referenceImageUri,
+                                contentDescription = "Reference face",
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showImageDialog = false
+                            try {
+                                // Add a small delay to ensure dialog is dismissed before navigation
+                                navController.navigate(Screen.Capture.route)
+                            } catch (e: Exception) {
+                                Log.e("SettingsScreen", "Navigation error", e)
+                            }
+                        }
+                    ) {
+                        Text(if (referenceImageUri != null) "Change Image" else "Take Picture")
+                    }
+                },
+                dismissButton = if (referenceImageUri != null) {
+                    {
+                        Button(
+                            onClick = {
+                                preferencesManager.clearReferenceImage()
+                                showImageDialog = false
+                            }
+                        ) {
+                            Text("Remove Image")
+                        }
+                    }
+                } else null
             )
         }
     }
@@ -200,21 +268,4 @@ fun ChangePinDialog(
             }
         }
     )
-}
-
-@Composable
-fun SettingsSection(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        content()
-    }
 }
